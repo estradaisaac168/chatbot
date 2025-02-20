@@ -9,7 +9,9 @@
     const sendButton = document.getElementById("sendButton");
 
     let initialQuestion = 2;
+    let endQuestion = 4;
     let arrayResponse = [];
+    let arrayResponses = [];
     let arrayQuestion = [];
     let currentResponse = [];
 
@@ -44,6 +46,7 @@
 
             if (data.status) {
                 fillQuestion(data);
+                fillResponses(data);
                 displayBotMessage(data.question.question_text);
                 displayResponses(data.responses);
             } else {
@@ -144,7 +147,17 @@
 
         arrayQuestion.length = 0;
 
-        arrayQuestion = structuredClone(data.responses);
+        arrayQuestion = structuredClone(data);
+
+        // arrayQuestion = structuredClone(data);
+    }
+
+
+    function fillResponses(data) {
+
+        arrayResponses.length = 0;
+
+        arrayResponses = structuredClone(data.responses);
 
         // arrayQuestion = structuredClone(data);
     }
@@ -157,12 +170,12 @@
         arrayResponse = structuredClone(data.response);
     }
 
-    // function fillDocument(data) {
+    function fillDocument(data) {
 
-    //     arrayDocument.length = 0;
+        arrayDocument.length = 0;
 
-    //     arrayDocument = structuredClone(data);
-    // }
+        arrayDocument = structuredClone(data);
+    }
 
 
     /******************************************************  Manejar logica *********************************** */
@@ -171,52 +184,145 @@
     // Manejador seleccion del usuario
     async function handleUserSelection(opcion) {
 
-        let next_question = getIndex(opcion, arrayQuestion)?.next_question; //Obtener la next_question.
-        let next_response = getIndex(opcion, arrayQuestion)?.next_response; //Obtiene de la opcion la proxima pregunta.
-        let type_doc = getIndex(opcion, arrayQuestion)?.type_document;
+        let next_question = getIndex(opcion, arrayResponses)?.next_question; //Obtener la next_question.
+        let next_response = getIndex(opcion, arrayResponses)?.next_response; //Obtiene de la opcion la proxima pregunta.
+        let type_doc = getIndex(opcion, arrayResponses)?.type_document;
+
+        // let next_question = getIndex(opcion, arrayQuestion)?.next_question; //Obtener la next_question.
+        // let next_response = getIndex(opcion, arrayQuestion)?.next_response; //Obtiene de la opcion la proxima pregunta.
+        // let type_doc = getIndex(opcion, arrayQuestion)?.type_document;
 
 
-        let response_text = getIndex(opcion, arrayQuestion)?.response_text; //Obtener la opcion actual.
-        let response_id = getIndex(opcion, arrayQuestion)?.id; //Me devuelve el id de la opcion seleccionada
-        let question_id = getIndex(opcion, arrayQuestion)?.question_id; //Me devuelve el question_id de la opcion seleccionada
+        let response_text = getIndex(opcion, arrayResponses)?.response_text; //Obtener la opcion actual.
+        let response_id = getIndex(opcion, arrayResponses)?.id; //Me devuelve el id de la opcion seleccionada
+        let question_id = getIndex(opcion, arrayResponses)?.question_id; //Me devuelve el question_id de la opcion seleccionada
 
-        if (next_question && next_question !== null) { // Si hay siguiente respuesta
-            console.log('Si hay una siguiente pregunta');
+        // let response_text = getIndex(opcion, arrayQuestion)?.response_text; //Obtener la opcion actual.
+        // let response_id = getIndex(opcion, arrayQuestion)?.id; //Me devuelve el id de la opcion seleccionada
+        // let question_id = getIndex(opcion, arrayQuestion)?.question_id; //Me devuelve el question_id de la opcion seleccionada
 
-            displayUserMessage(response_text); //Muestra la opcion selecciona del usuario.
-            clearInput(); // Limpia el input.
+        if (getIndex(opcion, arrayResponses)?.type_response === 1) {
+            if (next_question && next_question !== null) { // Si hay siguiente respuesta
+                console.log('Si hay una siguiente pregunta');
 
-            await getQuestion(next_question); // Obtener el nuevo bloque de pregunta y respuestas.
+                displayUserMessage(response_text); //Muestra la opcion selecciona del usuario.
+                clearInput(); // Limpia el input.
 
-
-        } else { // No hay siguiente respuesta entonces verificar las respuestas.
-            console.log('No hay una siguiente pregunta pero si una respuesta');
-
-            if (next_response && next_response === 1) { //Evalua que exista y que tenga una secuencia respuesta.
-                console.log('Si hay una respuesta y una secuencia');
-
-                displayUserMessage(response_text);
-                clearInput();
-
-                await getResponse(response_id);
-
-                do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
-                    await getResponse(arrayResponse.id);
-                    next_response = arrayResponse.next_response;
-                    console.log(" next_response ", next_response);
-                } while (next_response === 1);
+                await getQuestion(next_question); // Obtener el nuevo bloque de pregunta y respuestas.
 
 
-                if (arrayResponse.next_question && arrayResponse.next_question !== null) {
-                    await getQuestion(arrayResponse.next_question);
+            } else { // No hay siguiente respuesta entonces verificar las respuestas.
+                console.log('No hay una siguiente pregunta pero si una respuesta');
+
+                if (next_response && next_response === 1) { //Evalua que exista y que tenga una secuencia respuesta.
+                    console.log('Si hay una respuesta y una secuencia');
+
+                    displayUserMessage(response_text);
+                    clearInput();
+
+                    await getResponse(response_id);
+
+                    do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
+                        await getResponse(arrayResponse.id);
+                        next_response = arrayResponse.next_response;
+                        console.log(" next_response ", next_response);
+                    } while (next_response === 1);
+
+
+                    if (arrayResponse.next_question && arrayResponse.next_question !== null) {
+                        await getQuestion(arrayResponse.next_question);
+                    }
+
+                } else {
+                    console.log('No hay proxima pregunta pero Si hay una respuesta y no secuencia');
+
                 }
 
-            } else {
-                console.log('No hay proxima pregunta pero Si hay una respuesta y no secuencia');
-
             }
-
         }
+
+
+        if (getIndex(opcion, arrayResponses)?.type_response === 2) {
+            if (next_question && next_question !== null) {  //Si no es null llamar a la siguiente pregunta.
+                console.log('Hay next question');
+                displayUserMessage(response_text); //Muestra la opcion selecciona del usuario.
+                clearInput();
+                await getQuestion(next_question); // Obtener el nuevo bloque de pregunta y respuestas.
+
+            } else { //Si es null llamar a la respuesta. //Imprimir documento
+
+                if (next_response && next_response === 1) {  //Si hay siguiente respuesta
+                    console.log('No hay next question pero Hay proxima respuesta');
+
+                    displayUserMessage(response_text);
+                    clearInput();
+
+                    // Mostrar Secuencia de la respuesta
+                    do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
+                        await getResponse(response_id);
+                        next_response = arrayResponse.next_response;
+                    } while (next_response === 1);
+
+                    const response = await createPDF(type_doc, response_id);
+
+                    fillDocument(response);
+
+
+
+                    if (arrayDocument.status) {
+                        console.log("Proxima pregunta");
+                        await getQuestion(arrayResponse.next_question);
+                    } else {
+                        displayBotMessage("No se pudo generar tu documento");
+                    }
+
+                    // if (type_doc && type_doc === 2) { // Segun el tipo de documento a imprimir
+                    //     console.log('tipo de documento: ', type_doc);
+
+                    //     // Mostrar Secuencia de la respuesta
+                    //     do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
+                    //         await getResponse(response_id);
+                    //         next_response = arrayResponse.next_response;
+                    //     } while (next_response === 1);
+
+                    //     await createPDF(type_doc, response_id);
+
+                    //     console.log(type_doc, response_id);
+
+                    //     console.log(arrayResponse.next_question);
+                    //     console.log('question', next_question);
+                    //     console.log('response', next_response);
+                    //     console.log('arrayDocument', arrayDocument);
+
+                    //     if (response.status) {
+                    //         console.log("Proxima pregunta");
+                    //         // await getQuestion(arrayResponse.next_question);
+                    //     } else {
+                    //         displayBotMessage("No se pudo generar tu documento");
+                    //     }
+
+                    // }
+
+                } else { // Si no hay respuesta siguiente
+                    console.log('No hay next question  y No hay proxima respuesta');
+                    // displayUserMessage(response_text);
+                    console.log('arrayDocument', arrayDocument);
+                    if (response_text === 'Descargar') {
+                        // await getResponse(null);
+                        displayUserMessage(response_text);
+                        await downloadPDF(arrayDocument.id);
+                        await getQuestion(endQuestion);
+                    } else {
+                        displayUserMessage(response_text);
+                        clearInput();
+                        console.log('Mandar por correo');
+                        return;
+                    }
+                }
+            }
+        }
+
+
 
         // if (getIndex(opcion, arrayQuestion)?.type_response === 1) { // Solamente para tipo normal
         //     if (next_question && next_question !== null) {  //Si no es null llamar a la siguiente pregunta.
@@ -275,60 +381,7 @@
         // }
 
 
-        // if (getIndex(opcion, arrayQuestion)?.type_response === 2) {
-        //     if (next_question && next_question !== null) {  //Si no es null llamar a la siguiente pregunta.
-        //         console.log('Hay next question');
-        //         displayUserMessage(response_text); //Muestra la opcion selecciona del usuario.
-        //         clearInput();
-        //         await getQuestion(next_question); // Obtener el nuevo bloque de pregunta y respuestas.
 
-        //     } else { //Si es null llamar a la respuesta. //Imprimir documento
-
-        //         if (next_response && next_response === 1) {  //Si hay siguiente respuesta
-        //             console.log('No hay next question pero Hay proxima respuesta');
-
-        //             displayUserMessage(response_text);
-        //             clearInput();
-
-        //             if (type_doc && type_doc === 2) { // Segun el tipo de documento a imprimir
-        //                 console.log('tipo de documento: ', type_doc);
-
-        //                 // Mostrar Secuencia de la respuesta
-        //                 do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
-        //                     await getResponse(response_id);
-        //                     next_response = arrayResponse.next_response;
-        //                 } while (next_response === 1);
-
-        //                 const response = await createPDF(type_doc, response_id);
-
-        //                 arrayDocument = [response];
-
-        //                 console.log(arrayResponse.next_question);
-        //                 console.log('question', next_question);
-        //                 console.log('response', next_response);
-
-        //                 if (response.status) {
-        //                     console.log("Proxima pregunta");
-        //                     // await getQuestion(arrayResponse.next_question);
-        //                 } else {
-        //                     displayBotMessage("No se pudo generar tu documento");
-        //                 }
-
-        //             }
-
-        //         } else { // Si no hay respuesta siguiente
-        //             console.log('No hay next question  y No hay proxima respuesta');
-        //             displayUserMessage(response_text);
-        //             if (response_text === 'Descargar') {
-        //                 // await getResponse(null);
-        //                 await downloadPDF(arrayDocument[0].id);
-        //                 await getQuestion(4);
-        //             } else {
-
-        //             }
-        //         }
-        //     }
-        // }
 
     }
 
@@ -337,7 +390,7 @@
 
         const opcion = userInput.value.trim(); //Numero ingresado por el usuario
 
-        if (checkIndex(opcion, arrayQuestion)) { //Chequea si existe el indice en el array segun la opcion que selecciono el usuario.
+        if (checkIndex(opcion, arrayResponses)) { //Chequea si existe el indice en el array segun la opcion que selecciono el usuario.
 
             handleUserSelection(opcion); // Llama al manejador que tiene la logica de como interactua el usuario con las preguntas.
 
@@ -345,6 +398,7 @@
             displayUserMessage(`Opcion ${opcion}`); // Imprime la seleccion del usuario
             displayBotMessage(`Selecciona una de las opcones en la lista`); //Mensaje de alerta sobre seleccionar la opcion correcta.
             clearInput(); // Limpia el input de lo ingreso el usuario.
+
             displayResponses(arrayQuestion.responses.filter(option => option.question_id === arrayQuestion.question.id));
         }
 
