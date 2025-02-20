@@ -20,6 +20,10 @@
     // Iniciar el flujo del chatbot
     getQuestion(initialQuestion);
 
+    const type_document = {
+        currentValue: 0
+    }
+
     /******************************************************  Fetch API *********************************** */
 
 
@@ -123,7 +127,7 @@
             });
 
             const blob = await response.blob();
-    
+
             // const url = window.URL.createObjectURL(blob);
 
             return window.URL.createObjectURL(blob);
@@ -159,9 +163,7 @@
         arrayDocument = structuredClone(data);
     }
 
-    const type_document = {
-        currentValue: 0
-    }
+
 
     function updateTypeDoc(newValue) {
         if (newValue !== null) {
@@ -170,7 +172,10 @@
     }
 
     const dictionaryTypesDocuments = new Map([
-        [2, "Boleta de pago"]
+        [1, "Constancia Salarial"],
+        [2, "Boleta de pago"],
+        [3, "Constancia de trabajo"]
+
     ]);
 
 
@@ -180,26 +185,26 @@
 
     async function handleUserSelection(opcion) { // Manejador seleccion del usuario
 
+        // console.log('Question con Responses', arrayQuestion);
+        // console.log('Only responses', arrayResponses);
+        // console.log('Current response', arrayResponse);
+        // console.log('Document', arrayDocument);
+
         let next_question = getIndex(opcion, arrayResponses)?.next_question; //Obtener la next_question.
-        let next_response = getIndex(opcion, arrayResponses)?.next_response; //Obtiene de la opcion la proxima pregunta.
+        let parent_response = getIndex(opcion, arrayResponses)?.parent_response; //Obtiene de la opcion la proxima pregunta 0 || 1.
+        let next_response = getIndex(opcion, arrayResponses)?.next_response; //Obtiene el id la proxima pregunta.
         let type_doc = getIndex(opcion, arrayResponses)?.type_document;
-
-        // let next_question = getIndex(opcion, arrayQuestion)?.next_question; //Obtener la next_question.
-        // let next_response = getIndex(opcion, arrayQuestion)?.next_response; //Obtiene de la opcion la proxima pregunta.
-        // let type_doc = getIndex(opcion, arrayQuestion)?.type_document;
-
+        let type_response = getIndex(opcion, arrayResponses)?.type_response;
 
         let response_text = getIndex(opcion, arrayResponses)?.response_text; //Obtener la opcion actual.
         let response_id = getIndex(opcion, arrayResponses)?.id; //Me devuelve el id de la opcion seleccionada
         let question_id = getIndex(opcion, arrayResponses)?.question_id; //Me devuelve el question_id de la opcion seleccionada
 
-        // let response_text = getIndex(opcion, arrayQuestion)?.response_text; //Obtener la opcion actual.
-        // let response_id = getIndex(opcion, arrayQuestion)?.id; //Me devuelve el id de la opcion seleccionada
-        // let question_id = getIndex(opcion, arrayQuestion)?.question_id; //Me devuelve el question_id de la opcion seleccionada
-
         if (type_doc !== null) { // Si type_doc es numero dejar pasar.
             updateTypeDoc(type_doc);
         }
+
+
 
         if (getIndex(opcion, arrayResponses)?.type_response === 1) {
             if (next_question && next_question !== null) { // Si hay siguiente respuesta
@@ -222,12 +227,16 @@
 
                     await getResponse(response_id);
 
-                    do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
-                        await getResponse(arrayResponse.id);
-                        next_response = arrayResponse.next_response;
-                        console.log(" next_response ", next_response);
-                    } while (next_response === 1);
+                    if (arrayResponse.next_response !== null) {
 
+                        do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
+                            await getResponse(arrayResponse.id);
+                            next_response = arrayResponse.next_response;
+                            console.log(" next_response ", next_response);
+                        } while (next_response === 1);
+                    }else{
+                        console.log("Ha habido un error aca: Si hay una respuesta y una secuencia");
+                    }
 
                     if (arrayResponse.next_question && arrayResponse.next_question !== null) {
                         await getQuestion(arrayResponse.next_question);
@@ -281,33 +290,6 @@
                         displayBotMessage("No se pudo generar tu documento");
                     }
 
-                    // if (type_doc && type_doc === 2) { // Segun el tipo de documento a imprimir
-                    //     console.log('tipo de documento: ', type_doc);
-
-                    //     // Mostrar Secuencia de la respuesta
-                    //     do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
-                    //         await getResponse(response_id);
-                    //         next_response = arrayResponse.next_response;
-                    //     } while (next_response === 1);
-
-                    //     await createPDF(type_doc, response_id);
-
-                    //     console.log(type_doc, response_id);
-
-                    //     console.log(arrayResponse.next_question);
-                    //     console.log('question', next_question);
-                    //     console.log('response', next_response);
-                    //     console.log('arrayDocument', arrayDocument);
-
-                    //     if (response.status) {
-                    //         console.log("Proxima pregunta");
-                    //         // await getQuestion(arrayResponse.next_question);
-                    //     } else {
-                    //         displayBotMessage("No se pudo generar tu documento");
-                    //     }
-
-                    // }
-
                 } else { // Si no hay respuesta siguiente
                     console.log('No hay next question  y No hay proxima respuesta');
                     // displayUserMessage(response_text);
@@ -319,6 +301,7 @@
                         // await downloadPDF(arrayDocument.id);
                         const url = await downloadPDF(arrayDocument.id); // Imprime el nombre del documento?
 
+                        console.log('type_document.currentValue: ', type_document.currentValue, "type_doc: ", type_doc);
                         if (dictionaryTypesDocuments.has(type_document.currentValue)) {
                             displayBotDownloadLink(url, dictionaryTypesDocuments.get(type_document.currentValue));
                         }
@@ -333,6 +316,57 @@
                 }
             }
         }
+
+
+
+
+
+        // if (type_response === 1 || type_response === null) {
+
+        //     if (next_question && next_question !== null) { // Si hay siguiente respuesta
+
+        //         console.log('Si hay una siguiente pregunta', next_question);
+        //         displayUserMessage(response_text); //Muestra la opcion selecciona del usuario.
+        //         clearInput(); // Limpia el input.
+        //         if (next_question && next_question !== null) {
+        //             await getQuestion(next_question); // Obtener el nuevo bloque de pregunta y respuestas.
+        //         }
+
+        //     } else { // No hay siguiente respuesta entonces verificar las respuestas.
+
+        //         console.log('No hay una siguiente pregunta pero si una respuesta-> ', 'parent_response', parent_response, 'next_response', next_response);
+        //         if (parent_response && parent_response === 1) { //Evalua que exista y que tenga una secuencia respuesta.
+
+
+        //             console.log('Si hay una respuesta y una secuencia-> ', 'parent_response', parent_response, 'response_text: ', response_text);
+        //             displayUserMessage(response_text);
+        //             clearInput();
+
+        //             await getResponse(next_response);
+
+        //             if (arrayResponse.next_response && arrayResponse.next_response !== null) {
+
+        //                 do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
+        //                     await getResponse(arrayResponse.next_response);
+        //                     parent_response = arrayResponse.parent_response;
+        //                     console.log(" parent_response ", parent_response);
+        //                 } while (parent_response === 1);
+        //             }
+
+
+        //             if (arrayResponse.next_question && arrayResponse.next_question !== null) {
+        //                 await getQuestion(arrayResponse.next_question);
+        //             }
+
+        //         } else {
+        //             console.log('No hay proxima pregunta pero Si hay una respuesta sin secunecia secuencia');
+
+        //         }
+        //     }
+
+
+
+        // }
 
     }
 
