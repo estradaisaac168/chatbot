@@ -13,7 +13,7 @@
     let arrayResponse = [];
     let arrayResponses = [];
     let arrayQuestion = [];
-    let currentResponse = [];
+    // let currentTypeDoc = [];
 
     let arrayDocument = [];
 
@@ -122,34 +122,11 @@
                 credentials: 'include'
             });
 
-
-            const data = await response.json();
-
-            if (data.status) {
-                const filename = data.filename;
-                const url = data.url;
-
-                displayBotDownloadLink(url.replace(/\\/g, ""), filename);
-            }
-            // Obtener el nombre real del archivo desde los headers
-            // let filename = "documento.pdf"; // Nombre por defecto
-            // const contentDisposition = response.headers.get('Content-Disposition');
-
-            // if (contentDisposition) {
-            //     const match = contentDisposition.match(/filename="(.+)"/);
-            //     if (match && match[1]) {
-            //         filename = match[1]; // Extrae el nombre real
-            //     }
-            // }
-
-            // const blob = await response.blob();
+            const blob = await response.blob();
+    
             // const url = window.URL.createObjectURL(blob);
 
-            // displayBotDownloadLink(url, filename);
-
-            // return window.URL.createObjectURL(blob);
-
-            // displayBotDownloadLink(url);
+            return window.URL.createObjectURL(blob);
 
         } catch (error) {
             console.error('Mensaje de error desde crear pdf', error);
@@ -182,6 +159,16 @@
         arrayDocument = structuredClone(data);
     }
 
+    const type_document = {
+        currentValue: 0
+    }
+
+    function updateTypeDoc(newValue) {
+        if (newValue !== null) {
+            type_document.currentValue = newValue;
+        }
+    }
+
     const dictionaryTypesDocuments = new Map([
         [2, "Boleta de pago"]
     ]);
@@ -209,6 +196,10 @@
         // let response_text = getIndex(opcion, arrayQuestion)?.response_text; //Obtener la opcion actual.
         // let response_id = getIndex(opcion, arrayQuestion)?.id; //Me devuelve el id de la opcion seleccionada
         // let question_id = getIndex(opcion, arrayQuestion)?.question_id; //Me devuelve el question_id de la opcion seleccionada
+
+        if (type_doc !== null) { // Si type_doc es numero dejar pasar.
+            updateTypeDoc(type_doc);
+        }
 
         if (getIndex(opcion, arrayResponses)?.type_response === 1) {
             if (next_question && next_question !== null) { // Si hay siguiente respuesta
@@ -272,9 +263,14 @@
                         next_response = arrayResponse.next_response;
                     } while (next_response === 1);
 
-                    const response = await createPDF(type_doc, response_id);
+                    if (type_document.currentValue > 0) {
+                        const response = await createPDF(type_document.currentValue, response_id);
+                        fillDocument(response);
+                    }
 
-                    fillDocument(response);
+                    // const response = await createPDF(type_doc, response_id);
+
+                    // fillDocument(response);
 
 
 
@@ -319,8 +315,14 @@
                     if (response_text === 'Descargar') {
                         // await getResponse(null);
                         displayUserMessage(response_text);
+                        clearInput();
                         // await downloadPDF(arrayDocument.id);
-                        await downloadPDF(arrayDocument.id); // Imprime el nombre del documento?
+                        const url = await downloadPDF(arrayDocument.id); // Imprime el nombre del documento?
+
+                        if (dictionaryTypesDocuments.has(type_document.currentValue)) {
+                            displayBotDownloadLink(url, dictionaryTypesDocuments.get(type_document.currentValue));
+                        }
+
                         await getQuestion(endQuestion);
                     } else {
                         displayUserMessage(response_text);
@@ -425,7 +427,7 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    function displayBotDownloadLink(url, filename = "") {
+    function displayBotDownloadLink(url, filename = "document.pdf") {
         const botMessage = document.createElement("div");
         botMessage.className = "bot-message d-flex flex-column align-items-start";
 
