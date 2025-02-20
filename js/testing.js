@@ -22,15 +22,8 @@
 
     /******************************************************  Fetch API *********************************** */
 
-
-    // Función para obtener la pregunta y opciones desde el servidor
-    async function getQuestion(questionId) {
-
-        // currentQuestion.length = 0;
-
-        // currentQuestion.push({
-        //     id: questionId
-        // });
+    
+    async function getQuestion(questionId) { // Función para obtener la pregunta y opciones desde el servidor
 
         try {
 
@@ -59,7 +52,7 @@
         }
     }
 
-    async function getResponse(responseId) {
+    async function getResponse(responseId) { // Funcion para obtener la respuesta del usuario.
 
         try {
 
@@ -87,8 +80,7 @@
     }
 
 
-    // Generr el pdf
-    async function createPDF(clave, responseId) {
+    async function createPDF(clave, responseId) { // Funcion para crear el PDF
         try {
 
             const formData = new URLSearchParams();
@@ -143,37 +135,25 @@
     /************************************************************************************************************* */
 
 
-    function fillQuestion(data) {
-
+    function fillQuestion(data) { // Llena el arrayQuestion con la pregunta actual y las respuestas que pertenecen a la pregunta.
         arrayQuestion.length = 0;
-
         arrayQuestion = structuredClone(data);
-
-        // arrayQuestion = structuredClone(data);
     }
 
 
-    function fillResponses(data) {
-
+    function fillResponses(data) { // Llena el arrayResponses con las preguntas de la respuesta actual con el fin de separar las respuestas para acceder mas facilmente.
         arrayResponses.length = 0;
-
         arrayResponses = structuredClone(data.responses);
-
-        // arrayQuestion = structuredClone(data);
     }
 
 
-    function fillResponse(data) {
-
+    function fillResponse(data) { // Llena el arrayResponse con la respuesta actual obtenida de getReponse();
         arrayResponse.length = 0;
-
         arrayResponse = structuredClone(data.response);
     }
 
-    function fillDocument(data) {
-
+    function fillDocument(data) { // Llena el arrayDocument con el id del documento recien generado para poder acceder a este.
         arrayDocument.length = 0;
-
         arrayDocument = structuredClone(data);
     }
 
@@ -181,8 +161,8 @@
     /******************************************************  Manejar logica *********************************** */
 
 
-    // Manejador seleccion del usuario
-    async function handleUserSelection(opcion) {
+    
+    async function handleUserSelection(opcion) { // Manejador seleccion del usuario
 
         let next_question = getIndex(opcion, arrayResponses)?.next_question; //Obtener la next_question.
         let next_response = getIndex(opcion, arrayResponses)?.next_response; //Obtiene de la opcion la proxima pregunta.
@@ -321,67 +301,6 @@
                 }
             }
         }
-
-
-
-        // if (getIndex(opcion, arrayQuestion)?.type_response === 1) { // Solamente para tipo normal
-        //     if (next_question && next_question !== null) {  //Si no es null llamar a la siguiente pregunta.
-
-        //         displayUserMessage(response_text); //Muestra la opcion selecciona del usuario.
-        //         clearInput();
-        //         await getQuestion(next_question); // Obtener el nuevo bloque de pregunta y respuestas.
-
-        //     } else { //Si es null llamar a la respuesta.
-
-        //         // let next_question = getIndex(opcion, arrayQuestion)?.next_question;
-        //         // let next_response = getIndex(opcion, arrayQuestion)?.next_response; //Obtiene de la opcion la proxima pregunta.
-        //         // let response_id = getIndex(opcion, arrayQuestion)?.id; //Obtiene el indice y luego el id de ese indice.
-
-        //         if (next_response && next_response === 1) { //Evalua que exista y que tenga una secuencia respuesta.
-
-        //             let response_text = getIndex(opcion, arrayQuestion)?.response_text;  //Obtiene el texto de la repuesta actual.
-        //             displayUserMessage(response_text);  //Imprime por mensaje el texto que selecciono el usuario.
-
-        //             const response = await getResponse(response_id);  // Se manda a llamar la proxima respuesta.
-
-        //             arrayResponse = [response.document];
-
-        //             displayBotMessage(arrayResponse[0].response_text);
-
-        //             clearInput();  //Limpia el input de lo que ingreso el usuario.
-
-        //             do {  //Hacer mientras (Llama las respuestas mientras exista una proxima pregunta).
-        //                 const response = await getResponse(arrayResponse[0].id);
-        //                 arrayResponse = [response.document];
-        //                 if (arrayResponse) displayBotMessage(arrayResponse[0].response_text);
-        //                 next_response = arrayResponse.next_response;
-        //                 console.log(" next_response ", next_response);
-        //             } while (next_response === 1);
-
-
-
-        //             console.log(" Next question? ", arrayResponse[0].next_question);
-        //             if (arrayResponse[0].next_question && arrayResponse[0].next_question !== null) {
-
-        //                 await getQuestion(arrayResponse[0].next_question);
-        //             }
-        //         } else {
-        //             console.log("No tiene secuencia de respuesta");
-        //             await getResponse(response_id);  // Se manda a llamar la proxima respuesta.
-        //             clearInput();
-
-        //             console.log(next_question);
-
-        //             if (next_question && next_question !== null) {
-        //                 await getQuestion(next_question);
-        //             }
-        //         }
-
-        //     }
-        // }
-
-
-
 
     }
 
