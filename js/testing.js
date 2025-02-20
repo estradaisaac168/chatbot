@@ -22,7 +22,7 @@
 
     /******************************************************  Fetch API *********************************** */
 
-    
+
     async function getQuestion(questionId) { // Función para obtener la pregunta y opciones desde el servidor
 
         try {
@@ -111,7 +111,7 @@
     }
 
 
-    async function downloadPDF(documentoId) {
+    async function downloadPDF(documentoId) { // Funcion para descargar el pdf.
 
         try {
             const apiUrl = `https://3000-idx-chatbot-1739281119193.cluster-joak5ukfbnbyqspg4tewa33d24.cloudworkstations.dev/document/download/${documentoId}`;
@@ -122,17 +122,42 @@
                 credentials: 'include'
             });
 
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
 
-            displayBotDownloadLink(url);
+            const data = await response.json();
+
+            if (data.status) {
+                const filename = data.filename;
+                const url = data.url;
+
+                displayBotDownloadLink(url.replace(/\\/g, ""), filename);
+            }
+            // Obtener el nombre real del archivo desde los headers
+            // let filename = "documento.pdf"; // Nombre por defecto
+            // const contentDisposition = response.headers.get('Content-Disposition');
+
+            // if (contentDisposition) {
+            //     const match = contentDisposition.match(/filename="(.+)"/);
+            //     if (match && match[1]) {
+            //         filename = match[1]; // Extrae el nombre real
+            //     }
+            // }
+
+            // const blob = await response.blob();
+            // const url = window.URL.createObjectURL(blob);
+
+            // displayBotDownloadLink(url, filename);
+
+            // return window.URL.createObjectURL(blob);
+
+            // displayBotDownloadLink(url);
 
         } catch (error) {
             console.error('Mensaje de error desde crear pdf', error);
+            // return null;
         }
     }
 
-    /************************************************************************************************************* */
+    /*************************************************** Utilidades  ********************************************************** */
 
 
     function fillQuestion(data) { // Llena el arrayQuestion con la pregunta actual y las respuestas que pertenecen a la pregunta.
@@ -157,11 +182,15 @@
         arrayDocument = structuredClone(data);
     }
 
+    const dictionaryTypesDocuments = new Map([
+        [2, "Boleta de pago"]
+    ]);
+
 
     /******************************************************  Manejar logica *********************************** */
 
 
-    
+
     async function handleUserSelection(opcion) { // Manejador seleccion del usuario
 
         let next_question = getIndex(opcion, arrayResponses)?.next_question; //Obtener la next_question.
@@ -290,7 +319,8 @@
                     if (response_text === 'Descargar') {
                         // await getResponse(null);
                         displayUserMessage(response_text);
-                        await downloadPDF(arrayDocument.id);
+                        // await downloadPDF(arrayDocument.id);
+                        await downloadPDF(arrayDocument.id); // Imprime el nombre del documento?
                         await getQuestion(endQuestion);
                     } else {
                         displayUserMessage(response_text);
@@ -395,7 +425,7 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    function displayBotDownloadLink(url, filename = "documento pdf") {
+    function displayBotDownloadLink(url, filename = "") {
         const botMessage = document.createElement("div");
         botMessage.className = "bot-message d-flex flex-column align-items-start";
 
