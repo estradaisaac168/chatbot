@@ -84,11 +84,11 @@
     }
 
 
-    async function createPDF(clave, responseId) { // Funcion para crear el PDF
+    async function createPDF(type, responseId) { // Funcion para crear el PDF
         try {
 
             const formData = new URLSearchParams();
-            formData.append("clave", clave);
+            formData.append("type", type);
             formData.append("responseId", responseId);
 
             const apiUrl = 'https://3000-idx-chatbot-1739281119193.cluster-joak5ukfbnbyqspg4tewa33d24.cloudworkstations.dev/document/generate';
@@ -135,6 +135,27 @@
         } catch (error) {
             console.error('Mensaje de error desde crear pdf', error);
             // return null;
+        }
+    }
+
+
+    async function sendEmail(documentoId) { // Función para obtener la pregunta y opciones desde el servidor
+
+        try {
+
+            const urlApi = `https://3000-idx-chatbot-1739281119193.cluster-joak5ukfbnbyqspg4tewa33d24.cloudworkstations.dev/document/send/${documentoId}`;
+
+            const response = await fetch(urlApi, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'include'
+            });
+
+            return await response.json();
+
+        } catch (error) {
+            return null;
+            // alertify.error(showMessage('serverError'));
         }
     }
 
@@ -185,11 +206,6 @@
 
     async function handleUserSelection(opcion) { // Manejador seleccion del usuario
 
-        // console.log('Question con Responses', arrayQuestion);
-        // console.log('Only responses', arrayResponses);
-        // console.log('Current response', arrayResponse);
-        // console.log('Document', arrayDocument);
-
         let next_question = getIndex(opcion, arrayResponses)?.next_question; //Obtener la next_question.
         let parent_response = getIndex(opcion, arrayResponses)?.parent_response; //Obtiene de la opcion la proxima pregunta 0 || 1.
         let next_response = getIndex(opcion, arrayResponses)?.next_response; //Obtiene el id la proxima pregunta.
@@ -234,7 +250,7 @@
                             next_response = arrayResponse.next_response;
                             console.log(" next_response ", next_response);
                         } while (next_response === 1);
-                    }else{
+                    } else {
                         console.log("Ha habido un error aca: Si hay una respuesta y una secuencia");
                     }
 
@@ -272,6 +288,7 @@
                         next_response = arrayResponse.next_response;
                     } while (next_response === 1);
 
+                    console.log('type_document.currentValue: ', type_document.currentValue, "type_doc: ", type_doc);
                     if (type_document.currentValue > 0) {
                         const response = await createPDF(type_document.currentValue, response_id);
                         fillDocument(response);
@@ -288,6 +305,8 @@
                         await getQuestion(arrayResponse.next_question);
                     } else {
                         displayBotMessage("No se pudo generar tu documento");
+
+                        await getQuestion(endQuestion); //Quitar............................ para mientras
                     }
 
                 } else { // Si no hay respuesta siguiente
@@ -311,6 +330,11 @@
                         displayUserMessage(response_text);
                         clearInput();
                         console.log('Mandar por correo');
+                        if (type_document.currentValue > 0) {
+                            const response = await sendEmail(arrayDocument.id); //Este es el id de la respuesta como tal..
+                            displayBotMessage(response.message);
+                            await getQuestion(endQuestion);
+                        }
                         return;
                     }
                 }
@@ -404,7 +428,7 @@
         messageContainer.className = "d-flex align-items-center";
 
         const icon = document.createElement("i");
-        icon.classList.add("bi", "bi-robot", "me-2");
+        icon.classList.add("bi", "bi-robot", "me-2", "align-self-start");
 
         const textNode = document.createElement("span");
         textNode.textContent = message;
